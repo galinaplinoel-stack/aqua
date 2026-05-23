@@ -10,7 +10,7 @@ from rich.console import Console
 
 from agent.memory import Memory
 from agent.persona import Persona
-from agent.tools import create_default_registry
+from agent.tools import create_registry
 
 console = Console()
 
@@ -49,7 +49,7 @@ def run_gateway():
     # Setup tools
     tools = None
     if config.get("tools", {}).get("enabled", False):
-        tools = create_default_registry()
+        tools = create_registry()
 
     # Setup memory
     memory = None
