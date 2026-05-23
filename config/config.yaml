@@ -13,3 +13,10 @@ memory:
 
 tools:
   enabled: false
+
+platforms:
+  # Uncomment to enable Telegram bot
+  # telegram:
+  #   token: "your-bot-token"
+  #   allowed_chat_ids:
+  #     - "your-chat-id"
