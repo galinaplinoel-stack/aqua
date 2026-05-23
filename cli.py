@@ -11,6 +11,7 @@ from rich.panel import Panel
 
 from agent.core import ChatEngine
 from agent.persona import Persona
+from agent.tools import create_default_registry
 
 console = Console()
 
@@ -38,17 +39,25 @@ def run():
         persona_path=config["persona"]["path"],
     )
 
+    # Setup tools
+    tools = None
+    if config.get("tools", {}).get("enabled", False):
+        tools = create_default_registry()
+        console.print(f"[dim]Loaded {len(tools.tools)} tools[/dim]")
+
     # Setup chat engine
     engine = ChatEngine(
         base_url=config["provider"]["base_url"],
         api_key=config["provider"]["api_key"],
         model=config["provider"]["model"],
         persona=persona,
+        tools=tools,
     )
 
     # Welcome banner
+    tool_info = f" + {len(tools.tools)} tools" if tools else ""
     console.print(Panel(
-        f"[bold cyan]{persona.name}[/bold cyan] is ready.\n"
+        f"[bold cyan]{persona.name}[/bold cyan] is ready{tool_info}.\n"
         "[dim]Type your message, /help for commands, or /quit to exit.[/dim]",
         title="🤖 AQUA",
         border_style="cyan",
@@ -84,6 +93,7 @@ def run():
                     "/clear    — Clear conversation history\n"
                     "/reload   — Reload persona from Aqua.md\n"
                     "/history  — Show message count\n"
+                    "/tools    — List available tools\n"
                     "/quit     — Exit",
                     title="Commands",
                     border_style="dim",
@@ -101,6 +111,13 @@ def run():
             elif cmd == "/history":
                 count = len(engine.get_history()) - 1  # exclude system
                 console.print(f"[dim]{count} messages in history[/dim]")
+
+            elif cmd == "/tools":
+                if tools:
+                    for name, tool in tools.tools.items():
+                        console.print(f"  [cyan]{name}[/cyan]: {tool.description}")
+                else:
+                    console.print("[dim]No tools loaded. Enable in config.yaml[/dim]")
 
             else:
                 console.print(f"[yellow]Unknown command: {cmd}[/yellow]")
