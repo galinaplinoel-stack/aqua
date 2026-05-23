@@ -9,9 +9,7 @@ import yaml
 from rich.console import Console
 from rich.panel import Panel
 
-from agent.memory import Memory
-from agent.persona import Persona
-from agent.tools import create_registry
+# Lazy imports to avoid ImportError when deps not yet installed
 
 console = Console()
 
@@ -49,6 +47,10 @@ def main():
 
 def run_gateway():
     """Run as gateway with platform connections."""
+    from agent.memory import Memory
+    from agent.persona import Persona
+    from agent.tools import create_registry
+
     config = load_config()
 
     # Setup persona
