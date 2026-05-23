@@ -1,0 +1,15 @@
+provider:
+  base_url: "https://api.openai.com/v1"
+  api_key: "your-key-here"
+  model: "gpt-4o"
+
+persona:
+  name: "AQUA"
+  path: "Aqua.md"
+
+memory:
+  enabled: true
+  path: "memory.json"
+
+tools:
+  enabled: false
