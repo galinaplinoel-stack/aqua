@@ -86,15 +86,7 @@ def setup_wizard():
 
     config = load_config()
 
-    # === STEP 1: API Key first ===
-    console.print("\n[bold]🔑 API Key[/bold]")
-    api_key = Prompt.ask("Enter your API key (paste here)", password=True)
-
-    if not api_key:
-        console.print("[red]API key is required![/red]")
-        return
-
-    # === STEP 2: Provider selection (arrow keys) ===
+    # === STEP 1: Provider selection (arrow keys) ===
     console.print("\n[bold]📡 LLM Provider[/bold]")
     console.print("[dim]Supported: OpenAI, OpenRouter, Together, Groq, or any OpenAI-compatible API[/dim]\n")
 
@@ -105,6 +97,14 @@ def setup_wizard():
         provider_choice = "1"
 
     selected = PROVIDERS[provider_choice]
+
+    # === STEP 2: API Key ===
+    console.print("\n[bold]🔑 API Key[/bold]")
+    api_key = Prompt.ask("Enter your API key (paste here)", password=True)
+
+    if not api_key:
+        console.print("[red]API key is required![/red]")
+        return
 
     # === STEP 3: Base URL ===
     if provider_choice == "5":
