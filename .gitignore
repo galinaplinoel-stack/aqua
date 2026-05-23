@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.aqua_history
+memory.json
+hierarchy.json
+delegations.json
+agents/
+.cache/
+*.db
+*.db-wal
+.auth.json
