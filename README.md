@@ -115,15 +115,52 @@ git clone https://github.com/galinaplinoel-stack/aqua.git
 cd aqua
 pip install -r requirements.txt
 
-# Configure your API key
-nano config/config.yaml
+# Option 1: Interactive setup wizard (recommended)
+python main.py --setup
 
-# Run in CLI mode
+# Option 2: Quick setup with just API key
+python main.py --quick-setup YOUR_API_KEY openai
+
+# Option 3: Quick setup with custom provider
+python main.py --quick-setup YOUR_API_KEY openrouter "openai/gpt-4o"
+
+# Then run:
 python main.py
-
-# Or run in gateway mode (Telegram)
-python main.py --gateway
 ```
+
+### Setup Commands
+
+```bash
+# Interactive setup wizard
+python main.py --setup
+
+# Quick setup (one command)
+python main.py --quick-setup sk-xxxxx openai
+python main.py --quick-setup sk-xxxxx openrouter "openai/gpt-4o"
+python main.py --quick-setup sk-xxxxx groq
+
+# Show current config
+python main.py --config
+
+# Set specific values
+python main.py --config provider.api_key sk-new-key
+python main.py --config provider.model gpt-4-turbo
+python main.py --config persona.name "MyBot"
+
+# List available providers
+python main.py --providers
+```
+
+### Supported Providers
+
+| Provider | Command | Default Model |
+|----------|---------|---------------|
+| OpenAI | `--quick-setup KEY openai` | gpt-4o |
+| OpenRouter | `--quick-setup KEY openrouter` | openai/gpt-4o |
+| Together | `--quick-setup KEY together` | Llama-3-70b |
+| Groq | `--quick-setup KEY groq` | llama3-70b |
+| MiMo | `--quick-setup KEY mimo` | mimo-v2.5-pro |
+| Custom | `--quick-setup KEY custom URL MODEL` | - |
 
 ## Configuration
 

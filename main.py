@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AQUA - A simple, modular AI Agent CLI."""
+"""AQUA - Enterprise Multi-Agent Framework."""
 
 import asyncio
 import sys
@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 from rich.console import Console
+from rich.panel import Panel
 
 from agent.memory import Memory
 from agent.persona import Persona
@@ -20,6 +21,7 @@ def load_config(config_path: str = "config/config.yaml") -> dict:
     path = Path(config_path)
     if not path.exists():
         console.print(f"[red]Config not found: {config_path}[/red]")
+        console.print("[yellow]Run: python main.py --setup[/yellow]")
         sys.exit(1)
     with open(path) as f:
         return yaml.safe_load(f)
@@ -27,13 +29,22 @@ def load_config(config_path: str = "config/config.yaml") -> dict:
 
 def main():
     """Main entry point."""
-    if "--gateway" in sys.argv:
-        # Run in gateway mode (platforms)
+    args = sys.argv[1:]
+
+    # Handle config/setup commands
+    if not args or args[0] in ("--setup", "--config", "--quick-setup", "--providers"):
+        from agent.setup import config_cli
+        config_cli()
+        return
+
+    # Handle gateway mode
+    if "--gateway" in args:
         run_gateway()
-    else:
-        # Run in CLI mode
-        from cli import run
-        run()
+        return
+
+    # Default: CLI mode
+    from cli import run
+    run()
 
 
 def run_gateway():
@@ -82,5 +93,4 @@ def run_gateway():
 
 
 if __name__ == "__main__":
-    from rich.panel import Panel
     main()
