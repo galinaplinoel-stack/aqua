@@ -10,9 +10,13 @@ from rich.console import Console
 from rich.panel import Panel
 
 from agent.core import ChatEngine
+from agent.delegation import DelegationManager
+from agent.hierarchy import Hierarchy, create_default_hierarchy
 from agent.memory import Memory
 from agent.persona import Persona
+from agent.subagent import AgentFactory
 from agent.tools import ToolRegistry, create_default_registry
+from agent.delegation_tools import create_delegation_tools
 
 console = Console()
 
@@ -44,7 +48,6 @@ def run():
     tools = None
     if config.get("tools", {}).get("enabled", False):
         tools = create_default_registry()
-        console.print(f"[dim]Loaded {len(tools.tools)} tools[/dim]")
 
     # Setup memory
     memory = None
@@ -58,6 +61,28 @@ def run():
         stats = memory.get_stats()
         console.print(f"[dim]Memory: {stats['facts']} facts, {stats['conversations']} conversations[/dim]")
 
+    # Setup hierarchy
+    hierarchy_config = config.get("hierarchy", {})
+    hierarchy_path = hierarchy_config.get("path", "hierarchy.json")
+    if hierarchy_config.get("enabled", False):
+        hierarchy = create_default_hierarchy(hierarchy_path)
+    else:
+        hierarchy = Hierarchy(path=hierarchy_path)
+
+    # Setup agent factory
+    agent_factory = AgentFactory(
+        client=None,  # Will be set after ChatEngine creation
+        model=config["provider"]["model"],
+        tools=tools,
+        memory_path=config.get("agents", {}).get("path", "agents"),
+    )
+
+    # Setup delegation manager
+    delegation = DelegationManager(
+        agent_factory=agent_factory,
+        path=config.get("delegation", {}).get("path", "delegations.json"),
+    )
+
     # Setup chat engine
     engine = ChatEngine(
         base_url=config["provider"]["base_url"],
@@ -68,12 +93,24 @@ def run():
         memory=memory,
     )
 
+    # Set client in agent factory
+    agent_factory.client = engine.client
+
+    # Register delegation tools if hierarchy enabled
+    if hierarchy_config.get("enabled", False) and tools:
+        delegation_tools = create_delegation_tools(agent_factory, hierarchy, delegation)
+        for name, tool_data in delegation_tools.items():
+            tools.register_dynamic(name, tool_data["func"], tool_data["schema"])
+        console.print(f"[dim]Loaded {len(delegation_tools)} delegation tools[/dim]")
+
     # Welcome banner
     features = []
     if tools:
         features.append(f"{len(tools.tools)} tools")
     if memory:
         features.append("memory")
+    if hierarchy_config.get("enabled", False):
+        features.append("hierarchy")
     feature_info = f" ({', '.join(features)})" if features else ""
 
     console.print(Panel(
@@ -113,19 +150,28 @@ def run():
                 break
 
             elif cmd == "/help":
-                console.print(Panel(
-                    "/help        — Show this help\n"
-                    "/clear       — Clear conversation history\n"
-                    "/reload      — Reload persona from Aqua.md\n"
-                    "/history     — Show message count\n"
-                    "/tools       — List available tools\n"
-                    "/remember X  — Save a fact to memory\n"
-                    "/memory      — Show memory stats\n"
-                    "/search X    — Search memory\n"
-                    "/quit        — Exit",
-                    title="Commands",
-                    border_style="dim",
-                ))
+                help_text = """
+[bold]Chat Commands[/bold]
+/help        — Show this help
+/clear       — Clear conversation history
+/reload      — Reload persona from Aqua.md
+/history     — Show message count
+/tools       — List available tools
+/remember X  — Save a fact to memory
+/memory      — Show memory stats
+/search X    — Search memory
+/quit        — Exit
+
+[bold]Agent Commands[/bold]
+/agents              — List all agents
+/create NAME ROLE DEPT DESC — Create new agent
+/assign TITLE DESC AGENT_ID — Assign task
+/tasks [AGENT_ID]   — List tasks
+/execute TASK_ID     — Execute a task
+/orgchart           — Show company structure
+/departments        — List departments
+"""
+                console.print(Panel(help_text, title="Commands", border_style="dim"))
 
             elif cmd == "/clear":
                 engine.clear_history()
@@ -182,6 +228,77 @@ def run():
                             console.print(f"  [{r['type']}] {r['content']}")
                     else:
                         console.print("[dim]No results found[/dim]")
+
+            # Agent commands
+            elif cmd == "/agents":
+                agents = agent_factory.list_agents()
+                if not agents:
+                    console.print("[dim]No agents created yet. Use /create to add one.[/dim]")
+                else:
+                    for agent in agents:
+                        console.print(f"  [cyan]{agent['id']}[/cyan]: {agent['name']} ({agent['role']} in {agent['department']})")
+
+            elif cmd == "/create":
+                if not arg:
+                    console.print("[yellow]Usage: /create NAME ROLE DEPT DESCRIPTION[/yellow]")
+                else:
+                    parts = arg.split(" ", 3)
+                    if len(parts) < 4:
+                        console.print("[yellow]Usage: /create NAME ROLE DEPT DESCRIPTION[/yellow]")
+                    else:
+                        name, role, dept, desc = parts
+                        try:
+                            agent = agent_factory.create_agent(
+                                name=name,
+                                role=role,
+                                department=dept,
+                                description=desc,
+                            )
+                            console.print(f"[green]Created agent: {agent.name} ({agent.agent_id})[/green]")
+                        except Exception as e:
+                            console.print(f"[red]Error: {e}[/red]")
+
+            elif cmd == "/assign":
+                if not arg:
+                    console.print("[yellow]Usage: /assign TITLE DESCRIPTION AGENT_ID[/yellow]")
+                else:
+                    parts = arg.split(" ", 2)
+                    if len(parts) < 3:
+                        console.print("[yellow]Usage: /assign TITLE DESCRIPTION AGENT_ID[/yellow]")
+                    else:
+                        title, desc, agent_id = parts
+                        try:
+                            task = delegation.delegate_task(
+                                title=title,
+                                description=desc,
+                                agent_id=agent_id,
+                            )
+                            console.print(f"[green]Task assigned: {task.task_id}[/green]")
+                        except Exception as e:
+                            console.print(f"[red]Error: {e}[/red]")
+
+            elif cmd == "/tasks":
+                delegation.display_tasks(arg if arg else None)
+
+            elif cmd == "/execute":
+                if not arg:
+                    console.print("[yellow]Usage: /execute TASK_ID[/yellow]")
+                else:
+                    result = delegation.execute_task(arg)
+                    console.print(f"[green]Result:[/green]\n{result}")
+
+            elif cmd == "/orgchart":
+                hierarchy.display()
+
+            elif cmd == "/departments":
+                departments = hierarchy.departments
+                if not departments:
+                    console.print("[dim]No departments defined[/dim]")
+                else:
+                    for name, dept in departments.items():
+                        console.print(f"  [cyan]{name}[/cyan]: {dept.description}")
+                        if dept.head:
+                            console.print(f"    Head: {dept.head}")
 
             else:
                 console.print(f"[yellow]Unknown command: {cmd}[/yellow]")

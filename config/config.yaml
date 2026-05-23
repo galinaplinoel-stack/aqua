@@ -12,7 +12,20 @@ memory:
   path: "memory.json"
 
 tools:
-  enabled: false
+  enabled: true
+
+# Company hierarchy and multi-agent system
+hierarchy:
+  enabled: true
+  path: "hierarchy.json"
+
+# Agent storage
+agents:
+  path: "agents"
+
+# Task delegation
+delegation:
+  path: "delegations.json"
 
 platforms:
   # Uncomment to enable Telegram bot

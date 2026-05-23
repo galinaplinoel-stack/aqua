@@ -54,6 +54,15 @@ class ToolRegistry:
         """Register a tool."""
         self.tools[tool.name] = tool
 
+    def register_dynamic(self, name: str, func: Callable, schema: dict):
+        """Register a tool with pre-built schema."""
+        self.tools[name] = Tool(
+            name=name,
+            description=schema["function"]["description"],
+            parameters=schema["function"]["parameters"],
+            func=func,
+        )
+
     def get(self, name: str) -> Tool | None:
         """Get a tool by name."""
         return self.tools.get(name)
