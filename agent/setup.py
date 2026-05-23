@@ -4,13 +4,38 @@ import sys
 from pathlib import Path
 
 import yaml
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.shortcuts import radiolist_dialog
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
+from rich.text import Text
 
 console = Console()
 
 CONFIG_PATH = Path("config/config.yaml")
+
+AQUA_BANNER = r"""
+[bold cyan]
+    █████╗  ██████╗ ██╗   ██╗ █████╗ 
+   ██╔══██╗██╔═══██╗██║   ██║██╔══██╗
+   ███████║██║   ██║██║   ██║███████║
+   ██╔══██║██║▄▄ ██║██║   ██║██╔══██║
+   ██║  ██║╚██████╔╝╚██████╔╝██║  ██║
+   ╚═╝  ╚═╝ ╚══▀▀═╝  ╚══▀▀═╝ ╚═╝  ╚═╝
+[/bold cyan]
+[dim]  Enterprise Multi-Agent Framework[/dim]
+"""
+
+PROVIDERS = {
+    "1": {"name": "OpenAI", "base_url": "https://api.openai.com/v1", "model": "gpt-4o"},
+    "2": {"name": "OpenRouter", "base_url": "https://openrouter.ai/api/v1", "model": "openai/gpt-4o"},
+    "3": {"name": "Together", "base_url": "https://api.together.xyz/v1", "model": "meta-llama/Llama-3-70b-chat-hf"},
+    "4": {"name": "Groq", "base_url": "https://api.groq.com/openai/v1", "model": "llama3-70b-8192"},
+    "5": {"name": "Custom", "base_url": "", "model": ""},
+    "6": {"name": "MiMo", "base_url": "https://token-plan-sgp.xiaomimimo.com/v1", "model": "mimo-v2.5-pro"},
+}
 
 
 def load_config() -> dict:
@@ -28,10 +53,31 @@ def save_config(config: dict):
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
 
+def _select_provider_arrow() -> str:
+    """Arrow key provider selection using prompt_toolkit radiolist dialog."""
+    values = [
+        ("1", "1 — OpenAI (api.openai.com)"),
+        ("2", "2 — OpenRouter (openrouter.ai)"),
+        ("3", "3 — Together (api.together.xyz)"),
+        ("4", "4 — Groq (api.groq.com)"),
+        ("5", "5 — Custom (enter manually)"),
+        ("6", "6 — Xiaomi MiMo (api.mimo.ai)"),
+    ]
+    result = radiolist_dialog(
+        title="📡 LLM Provider",
+        text="Use arrow keys to select, Enter to confirm:",
+        values=values,
+    ).run()
+    return result if result else "1"
+
+
 def setup_wizard():
-    """Interactive setup wizard."""
+    """Interactive setup wizard with arrow key selection."""
+    # Show big banner
+    console.print(AQUA_BANNER)
+
     console.print(Panel(
-        "[bold cyan]AQUA Setup Wizard[/bold cyan]\n\n"
+        "[bold cyan]Setup Wizard[/bold cyan]\n\n"
         "Let's configure AQUA step by step.\n"
         "Press Enter to keep default values.",
         title="🚀 Setup",
@@ -40,66 +86,55 @@ def setup_wizard():
 
     config = load_config()
 
-    # Provider configuration
-    console.print("\n[bold]📡 LLM Provider Configuration[/bold]")
-    console.print("[dim]Supported: OpenAI, OpenRouter, Together, Groq, or any OpenAI-compatible API[/dim]\n")
-
-    # Preset providers
-    console.print("Popular providers:")
-    console.print("  [cyan]1[/cyan] — OpenAI (api.openai.com)")
-    console.print("  [cyan]2[/cyan] — OpenRouter (openrouter.ai)")
-    console.print("  [cyan]3[/cyan] — Together (api.together.xyz)")
-    console.print("  [cyan]4[/cyan] — Groq (api.groq.com)")
-    console.print("  [cyan]5[/cyan] — Custom (enter manually)")
-    console.print("  [cyan]6[/cyan] — Xiaomi MiMo (api.mimo.ai)")
-
-    provider_choice = Prompt.ask(
-        "Choose provider",
-        default="1",
-        choices=["1", "2", "3", "4", "5", "6"],
-    )
-
-    providers = {
-        "1": {"name": "OpenAI", "base_url": "https://api.openai.com/v1", "model": "gpt-4o"},
-        "2": {"name": "OpenRouter", "base_url": "https://openrouter.ai/api/v1", "model": "openai/gpt-4o"},
-        "3": {"name": "Together", "base_url": "https://api.together.xyz/v1", "model": "meta-llama/Llama-3-70b-chat-hf"},
-        "4": {"name": "Groq", "base_url": "https://api.groq.com/openai/v1", "model": "llama3-70b-8192"},
-        "5": {"name": "Custom", "base_url": "", "model": ""},
-        "6": {"name": "MiMo", "base_url": "https://api.mimo.ai/v1", "model": "mimo-v2.5-pro"},
-    }
-
-    selected = providers[provider_choice]
-
-    if provider_choice == "5":
-        base_url = Prompt.ask("Enter API base URL")
-        model = Prompt.ask("Enter model name")
-    else:
-        base_url = Prompt.ask("API base URL", default=selected["base_url"])
-        model = Prompt.ask("Model name", default=selected["model"])
-
-    api_key = Prompt.ask("🔑 Enter API key (paste here)", password=True)
+    # === STEP 1: API Key first ===
+    console.print("\n[bold]🔑 API Key[/bold]")
+    api_key = Prompt.ask("Enter your API key (paste here)", password=True)
 
     if not api_key:
         console.print("[red]API key is required![/red]")
         return
 
-    # Persona configuration
+    # === STEP 2: Provider selection (arrow keys) ===
+    console.print("\n[bold]📡 LLM Provider[/bold]")
+    console.print("[dim]Supported: OpenAI, OpenRouter, Together, Groq, or any OpenAI-compatible API[/dim]\n")
+
+    provider_choice = _select_provider_arrow()
+
+    if provider_choice is None:
+        console.print("[red]No provider selected. Using OpenAI.[/red]")
+        provider_choice = "1"
+
+    selected = PROVIDERS[provider_choice]
+
+    # === STEP 3: Base URL ===
+    if provider_choice == "5":
+        base_url = Prompt.ask("Enter API base URL")
+    else:
+        base_url = Prompt.ask("API base URL", default=selected["base_url"])
+
+    # === STEP 4: Model ===
+    if provider_choice == "5":
+        model = Prompt.ask("Enter model name")
+    else:
+        model = Prompt.ask("Model name", default=selected["model"])
+
+    # === Persona configuration ===
     console.print("\n[bold]🎭 Persona Configuration[/bold]")
     persona_name = Prompt.ask("Agent name", default="AQUA")
     persona_path = Prompt.ask("Persona file path", default="Aqua.md")
 
-    # Memory configuration
+    # === Memory configuration ===
     console.print("\n[bold]💾 Memory Configuration[/bold]")
     memory_enabled = Confirm.ask("Enable persistent memory?", default=True)
     memory_path = "memory.json"
     if memory_enabled:
         memory_path = Prompt.ask("Memory file path", default="memory.json")
 
-    # Tools configuration
+    # === Tools configuration ===
     console.print("\n[bold]🔧 Tools Configuration[/bold]")
     tools_enabled = Confirm.ask("Enable tools?", default=True)
 
-    # Hierarchy configuration
+    # === Hierarchy configuration ===
     console.print("\n[bold]🏢 Multi-Agent Hierarchy[/bold]")
     hierarchy_enabled = Confirm.ask("Enable company hierarchy & sub-agents?", default=True)
 
@@ -141,15 +176,18 @@ def setup_wizard():
     import os
     os.chmod(CONFIG_PATH, 0o600)
 
+    # Show success with banner
+    console.print(AQUA_BANNER)
     console.print(Panel(
-        f"[green]Configuration saved![/green]\n\n"
+        f"[green]✓ Configuration saved![/green]\n\n"
         f"Provider: [cyan]{selected['name']}[/cyan]\n"
+        f"Base URL: [cyan]{base_url}[/cyan]\n"
         f"Model: [cyan]{model}[/cyan]\n"
         f"Persona: [cyan]{persona_name}[/cyan]\n"
         f"Memory: [cyan]{'✓' if memory_enabled else '✗'}[/cyan]\n"
         f"Tools: [cyan]{'✓' if tools_enabled else '✗'}[/cyan]\n"
         f"Hierarchy: [cyan]{'✓' if hierarchy_enabled else '✗'}[/cyan]\n\n"
-        f"[dim]Run [bold]python main.py[/bold] to start![/dim]",
+        f"[dim]Run [bold]python3 main.py[/bold] to start![/dim]",
         title="✅ Setup Complete",
         border_style="green",
     ))
@@ -190,7 +228,7 @@ def show_config():
     config = load_config()
 
     if not config:
-        console.print("[yellow]No config found. Run: python main.py --setup[/yellow]")
+        console.print("[yellow]No config found. Run: python3 main.py --setup[/yellow]")
         return
 
     # Mask API key
@@ -199,6 +237,7 @@ def show_config():
         if len(key) > 8:
             config["provider"]["api_key"] = key[:4] + "..." + key[-4:]
 
+    console.print(AQUA_BANNER)
     console.print(Panel(
         yaml.dump(config, default_flow_style=False, allow_unicode=True),
         title="📋 Configuration",
@@ -213,7 +252,7 @@ def quick_setup(api_key: str, provider: str = "openai", model: str = ""):
         "openrouter": {"base_url": "https://openrouter.ai/api/v1", "model": "openai/gpt-4o"},
         "together": {"base_url": "https://api.together.xyz/v1", "model": "meta-llama/Llama-3-70b-chat-hf"},
         "groq": {"base_url": "https://api.groq.com/openai/v1", "model": "llama3-70b-8192"},
-        "mimo": {"base_url": "https://api.mimo.ai/v1", "model": "mimo-v2.5-pro"},
+        "mimo": {"base_url": "https://token-plan-sgp.xiaomimimo.com/v1", "model": "mimo-v2.5-pro"},
     }
 
     if provider not in providers:
@@ -242,8 +281,9 @@ def quick_setup(api_key: str, provider: str = "openai", model: str = ""):
     import os
     os.chmod(CONFIG_PATH, 0o600)
 
+    console.print(AQUA_BANNER)
     console.print(f"[green]✓ Configured with {provider} ({p['model']})[/green]")
-    console.print(f"[dim]Run [bold]python main.py[/bold] to start![/dim]")
+    console.print(f"[dim]Run [bold]python3 main.py[/bold] to start![/dim]")
 
 
 # CLI entry point for config commands
@@ -272,13 +312,14 @@ def config_cli():
             set_config(args[1], args[2])
     elif args[0] == "--quick-setup":
         if len(args) < 2:
-            console.print("[red]Usage: python main.py --quick-setup API_KEY [provider] [model][/red]")
+            console.print("[red]Usage: python3 main.py --quick-setup API_KEY [provider] [model][/red]")
             return
         api_key = args[1]
         provider = args[2] if len(args) > 2 else "openai"
         model = args[3] if len(args) > 3 else ""
         quick_setup(api_key, provider, model)
     elif args[0] == "--providers":
+        console.print(AQUA_BANNER)
         console.print("[bold]Available providers:[/bold]")
         console.print("  [cyan]openai[/cyan]      — OpenAI (GPT-4, GPT-3.5)")
         console.print("  [cyan]openrouter[/cyan] — OpenRouter (multi-model)")
