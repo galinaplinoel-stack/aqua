@@ -13,6 +13,11 @@ memory:
 
 tools:
   enabled: true
+  # Tool categories to load (leave empty for all)
+  categories: []
+  # Available: web, http, code_exec, git, database, file_formats,
+  #            email, vps, monitoring, caching, workflow, notifications,
+  #            calendar, plugins, auth, vector_memory
 
 # Company hierarchy and multi-agent system
 hierarchy:
@@ -26,6 +31,14 @@ agents:
 # Task delegation
 delegation:
   path: "delegations.json"
+
+# Plugins directory
+plugins:
+  path: "plugins"
+
+# Auth credentials (stored securely)
+auth:
+  path: ".auth.json"
 
 platforms:
   # Uncomment to enable Telegram bot

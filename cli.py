@@ -15,7 +15,7 @@ from agent.hierarchy import Hierarchy, create_default_hierarchy
 from agent.memory import Memory
 from agent.persona import Persona
 from agent.subagent import AgentFactory
-from agent.tools import ToolRegistry, create_default_registry
+from agent.tools import ToolRegistry, create_registry
 from agent.delegation_tools import create_delegation_tools
 
 console = Console()
@@ -45,9 +45,16 @@ def run():
     )
 
     # Setup tools
-    tools = None
-    if config.get("tools", {}).get("enabled", False):
-        tools = create_default_registry()
+    tools_config = config.get("tools", {})
+    tool_categories = tools_config.get("categories", [])
+    if tools_config.get("enabled", False):
+        if tool_categories:
+            tools = create_registry(categories=tool_categories)
+        else:
+            tools = create_registry()  # Load all
+        console.print(f"[dim]Loaded {len(tools.tools)} tools[/dim]")
+    else:
+        tools = None
 
     # Setup memory
     memory = None
@@ -170,6 +177,24 @@ def run():
 /execute TASK_ID     — Execute a task
 /orgchart           — Show company structure
 /departments        — List departments
+
+[bold]Tool Categories[/bold]
+/tools web           — Web search & scraping
+/tools http          — HTTP client / API
+/tools code_exec     — Code execution
+/tools git           — Git integration
+/tools database      — SQLite / PostgreSQL
+/tools file_formats  — PDF, CSV, Excel, JSON
+/tools email         — Email (SMTP/IMAP)
+/tools vps           — VPS management
+/tools monitoring    — Health checks
+/tools caching       — Cache & rate limiting
+/tools workflow      — Workflow engine
+/tools notifications — Discord, Slack, Telegram
+/tools calendar      — Calendar & scheduling
+/tools plugins       — Custom plugins
+/tools auth          — Credential management
+/tools vector_memory — Semantic memory
 """
                 console.print(Panel(help_text, title="Commands", border_style="dim"))
 
@@ -188,8 +213,25 @@ def run():
 
             elif cmd == "/tools":
                 if tools:
-                    for name, tool in tools.tools.items():
-                        console.print(f"  [cyan]{name}[/cyan]: {tool.description}")
+                    if arg:
+                        # Show tools for specific category
+                        from agent.tools import get_tools_by_category
+                        category_tools = get_tools_by_category(arg)
+                        if category_tools:
+                            console.print(f"\n[bold cyan]{arg}[/bold cyan] tools:")
+                            for name, tool_data in category_tools.items():
+                                console.print(f"  [green]{name}[/green]: {tool_data['schema']['function']['description']}")
+                        else:
+                            console.print(f"[yellow]Unknown category: {arg}[/yellow]")
+                    else:
+                        # Show all tools grouped by category
+                        from agent.tools import ALL_TOOL_CATEGORIES
+                        for category, cat_tools in ALL_TOOL_CATEGORIES.items():
+                            console.print(f"\n[bold cyan]{category}[/bold cyan] ({len(cat_tools)} tools)")
+                            for name in list(cat_tools.keys())[:3]:
+                                console.print(f"  [green]{name}[/green]")
+                            if len(cat_tools) > 3:
+                                console.print(f"  [dim]... and {len(cat_tools) - 3} more[/dim]")
                 else:
                     console.print("[dim]No tools loaded. Enable in config.yaml[/dim]")
 

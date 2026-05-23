@@ -63,6 +63,11 @@ class ToolRegistry:
             func=func,
         )
 
+    def register_batch(self, tools_dict: dict):
+        """Register multiple tools from a dict."""
+        for name, tool_data in tools_dict.items():
+            self.register_dynamic(name, tool_data["func"], tool_data["schema"])
+
     def get(self, name: str) -> Tool | None:
         """Get a tool by name."""
         return self.tools.get(name)
@@ -83,110 +88,25 @@ class ToolRegistry:
         except json.JSONDecodeError:
             return f"Invalid JSON arguments: {arguments}"
 
-
-# --- Built-in Tools ---
-
-def shell_exec(command: str) -> str:
-    """Execute a shell command and return output."""
-    try:
-        result = subprocess.run(
-            command,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        output = result.stdout
-        if result.stderr:
-            output += f"\n[stderr]\n{result.stderr}"
-        if result.returncode != 0:
-            output += f"\n[exit code: {result.returncode}]"
-        return output.strip() or "(no output)"
-    except subprocess.TimeoutExpired:
-        return "Error: Command timed out (30s limit)"
+    def list_tools(self) -> list[dict]:
+        """List all registered tools."""
+        return [
+            {"name": t.name, "description": t.description}
+            for t in self.tools.values()
+        ]
 
 
-def read_file(path: str) -> str:
-    """Read a file and return its contents."""
-    p = Path(path)
-    if not p.exists():
-        return f"Error: File not found: {path}"
-    if not p.is_file():
-        return f"Error: Not a file: {path}"
-    try:
-        content = p.read_text(encoding="utf-8")
-        if len(content) > 50000:
-            return content[:50000] + "\n... (truncated)"
-        return content
-    except Exception as e:
-        return f"Error reading file: {e}"
+def create_registry(categories: list[str] | None = None) -> ToolRegistry:
+    """Create a tool registry with specified categories."""
+    from agent.tools import ALL_TOOL_CATEGORIES, get_all_tools
 
-
-def write_file(path: str, content: str) -> str:
-    """Write content to a file."""
-    p = Path(path)
-    try:
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(content, encoding="utf-8")
-        return f"Written {len(content)} bytes to {path}"
-    except Exception as e:
-        return f"Error writing file: {e}"
-
-
-def create_default_registry() -> ToolRegistry:
-    """Create a registry with built-in tools."""
     registry = ToolRegistry()
 
-    registry.register(Tool(
-        name="shell",
-        description="Execute a shell command and return its output. Use for running scripts, checking files, system commands, etc.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "command": {
-                    "type": "string",
-                    "description": "The shell command to execute",
-                },
-            },
-            "required": ["command"],
-        },
-        func=shell_exec,
-    ))
-
-    registry.register(Tool(
-        name="read_file",
-        description="Read the contents of a file at the given path.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Path to the file to read",
-                },
-            },
-            "required": ["path"],
-        },
-        func=read_file,
-    ))
-
-    registry.register(Tool(
-        name="write_file",
-        description="Write content to a file. Creates parent directories if needed.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Path to the file to write",
-                },
-                "content": {
-                    "type": "string",
-                    "description": "Content to write to the file",
-                },
-            },
-            "required": ["path", "content"],
-        },
-        func=write_file,
-    ))
+    if categories:
+        for cat in categories:
+            if cat in ALL_TOOL_CATEGORIES:
+                registry.register_batch(ALL_TOOL_CATEGORIES[cat])
+    else:
+        registry.register_batch(get_all_tools())
 
     return registry
