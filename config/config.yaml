@@ -16,7 +16,7 @@ tools:
   # Tool categories to load (leave empty for all)
   categories: []
   # Available: web, http, code_exec, git, database, file_formats,
-  #            email, vps, monitoring, caching, workflow, notifications,
+  #            email, terminal, monitoring, caching, workflow, notifications,
   #            calendar, plugins, auth, vector_memory
 
 # Company hierarchy and multi-agent system

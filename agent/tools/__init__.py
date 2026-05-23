@@ -7,7 +7,7 @@ from agent.tools.git import GIT_TOOLS
 from agent.tools.database import DATABASE_TOOLS
 from agent.tools.file_formats import FILE_FORMAT_TOOLS
 from agent.tools.email import EMAIL_TOOLS
-from agent.tools.vps import VPS_TOOLS
+from agent.tools.terminal import VPS_TOOLS
 from agent.tools.monitoring import MONITORING_TOOLS
 from agent.tools.caching import CACHING_TOOLS
 from agent.tools.workflow import WORKFLOW_TOOLS
@@ -27,7 +27,7 @@ ALL_TOOL_CATEGORIES = {
     "database": DATABASE_TOOLS,
     "file_formats": FILE_FORMAT_TOOLS,
     "email": EMAIL_TOOLS,
-    "vps": VPS_TOOLS,
+    "terminal": VPS_TOOLS,
     "monitoring": MONITORING_TOOLS,
     "caching": CACHING_TOOLS,
     "workflow": WORKFLOW_TOOLS,

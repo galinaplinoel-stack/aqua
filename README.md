@@ -66,7 +66,7 @@ Most AI agent frameworks treat agents as isolated workers. AQUA takes a differen
 - `send_email` — Send via SMTP
 - `read_emails` — Read via IMAP
 
-### 🖥️ VPS Management (Full Access)
+### 🖥️ Terminal & VPS Management (Full Access)
 - `system_info` — System information (OS, CPU, memory, disk)
 - `process_list` — List running processes
 - `service_manage` — Manage systemd services
@@ -149,7 +149,7 @@ memory:
 # Tool System
 tools:
   enabled: true
-  categories: []  # Empty = load all, or specify: ["web", "vps", "git"]
+  categories: []  # Empty = load all, or specify: ["web", "terminal", "git"]
 
 # Company Hierarchy
 hierarchy:
@@ -183,7 +183,7 @@ Load only specific tool categories to reduce token usage:
 ```yaml
 tools:
   enabled: true
-  categories: ["web", "vps", "git", "monitoring"]
+  categories: ["web", "terminal", "git", "monitoring"]
 ```
 
 ### Custom Plugins
@@ -308,7 +308,7 @@ aqua/
 │   │   ├── database.py        # SQLite & PostgreSQL
 │   │   ├── file_formats.py    # PDF, CSV, Excel, JSON
 │   │   ├── email.py           # SMTP & IMAP
-│   │   ├── vps.py             # VPS management
+│   │   ├── terminal.py         # Terminal & VPS management
 │   │   ├── monitoring.py      # Health checks
 │   │   ├── caching.py         # Cache & rate limiting
 │   │   ├── workflow.py        # Workflow engine

@@ -186,7 +186,7 @@ def run():
 /tools database      — SQLite / PostgreSQL
 /tools file_formats  — PDF, CSV, Excel, JSON
 /tools email         — Email (SMTP/IMAP)
-/tools vps           — VPS management
+/tools terminal       — Terminal & VPS management
 /tools monitoring    — Health checks
 /tools caching       — Cache & rate limiting
 /tools workflow      — Workflow engine
