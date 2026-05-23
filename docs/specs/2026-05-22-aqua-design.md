@@ -22,7 +22,7 @@ AQUA is a simple, modular AI Agent CLI built in Python. It provides interactive 
 1. **Core (agent/core.py)** — Chat loop, LLM interaction, message handling
 2. **Tools (agent/tools.py)** — Tool registry, function calling, execution
 3. **Memory (agent/memory.py)** — Persistent memory via JSON file
-4. **Persona (agent/persona.py)** — System prompt management
+4. **Persona (agent/persona.py)** — System prompt management, loads `Aqua.md`
 5. **CLI (cli.py)** — Interactive terminal interface
 6. **Config (config/config.yaml)** — All settings in one file
 
@@ -36,7 +36,7 @@ provider:
 
 persona:
   name: "AQUA"
-  system_prompt: "You are AQUA, a helpful AI assistant."
+  path: "Aqua.md"  # Edit this file to customize personality
 
 memory:
   enabled: true
@@ -84,6 +84,7 @@ tools:
 
 ```
 aqua/
+├── Aqua.md              # Persona file (user-editable)
 ├── agent/
 │   ├── __init__.py
 │   ├── core.py

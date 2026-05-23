@@ -41,13 +41,27 @@ provider:
 
 persona:
   name: "AQUA"
-  system_prompt: "You are AQUA, a helpful AI assistant."
+  path: "Aqua.md"  # Edit this file to customize personality
 ```
+
+## Customization
+
+Edit `Aqua.md` in the project root to customize AQUA's personality:
+
+- **Identity** — Name, role, version
+- **Personality** — Who AQUA is and how it behaves
+- **Communication Style** — Language, tone, emoji usage
+- **Rules** — Hard rules AQUA always follows
+- **Context-specific behavior** — Different responses for casual vs technical
+- **Custom instructions** — Anything specific to your use case
+
+No code changes needed — just edit the file and restart.
 
 ## Architecture
 
 ```
 aqua/
+├── Aqua.md              # Persona file (edit to customize)
 ├── agent/
 │   ├── core.py          # Chat loop + LLM interaction
 │   ├── tools.py         # Tool registry + execution
