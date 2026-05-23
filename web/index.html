@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUA — Enterprise Multi-Agent Framework</title>
+    <meta name="description" content="AQUA is a powerful enterprise-grade multi-agent AI framework with 80+ built-in tools, persistent memory, persona system, and full VPS management.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        :root {
+            --bg: #0a0e17;
+            --bg-card: #111827;
+            --border: #1e293b;
+            --text: #e2e8f0;
+            --text-dim: #64748b;
+            --accent: #06b6d4;
+            --accent-glow: rgba(6, 182, 212, 0.3);
+            --accent2: #8b5cf6;
+            --accent3: #10b981;
+            --gradient: linear-gradient(135deg, #06b6d4, #8b5cf6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated background */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Nav */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            background: rgba(10, 14, 23, 0.8);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--accent); }
+
+        .btn-github {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .btn-github:hover {
+            border-color: var(--accent);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        .btn-github svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            background: rgba(6, 182, 212, 0.05);
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 32px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent3);
+            animation: pulse 2s infinite;
+        }
+
+        .hero-ascii {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.5rem, 1.5vw, 1rem);
+            line-height: 1.2;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: pre;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .hero h1 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 50px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        /* Terminal preview */
+        .terminal-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+            animation: fadeInUp 0.6s ease 0.5s both;
+        }
+
+        .terminal {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot:nth-child(1) { background: #ff5f57; }
+        .terminal-dot:nth-child(2) { background: #ffbd2e; }
+        .terminal-dot:nth-child(3) { background: #28c840; }
+
+        .terminal-title {
+            margin-left: 12px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .terminal-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.8;
+            color: #8b949e;
+        }
+
+        .terminal-body .prompt { color: var(--accent); }
+        .terminal-body .cmd { color: #e6edf3; }
+        .terminal-body .output { color: #7ee787; }
+        .terminal-body .comment { color: #484f58; }
+
+        /* Stats */
+        .stats {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            max-width: 900px;
+            margin: 0 auto 100px;
+            padding: 0 24px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 32px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            transition: all 0.3s;
+        }
+
+        .stat:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .stat-num {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Features */
+        .section {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px 100px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-sub {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 60px;
+            font-size: 1.05rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .feature {
+            padding: 28px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            transition: all 0.3s;
+        }
+
+        .feature:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(6, 182, 212, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+        }
+
+        .feature h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature p {
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* Tools */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .tool-tag {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .tool-tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* CTA */
+        .cta {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 100px 24px;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+
+        .cta p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav { padding: 12px 20px; }
+            .nav-links { gap: 16px; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .features-grid { grid-template-columns: 1fr; }
+            .tools-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-ascii { font-size: 0.4rem; }
+        }
+
+        @media (max-width: 480px) {
+            .nav-links a:not(.btn-github) { display: none; }
+            .stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Nav -->
+    <nav>
+        <div class="nav-logo">AQUA</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#tools">Tools</a>
+            <a href="#get-started">Get Started</a>
+            <a href="https://github.com/galinaplinoel-stack/aqua" class="btn-github" target="_blank">
+                <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                GitHub
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            Open Source • v1.0
+        </div>
+
+        <div class="hero-ascii"> █████╗  ██████╗ ██╗   ██╗ █████╗ 
+██╔══██╗██╔═══██╗██║   ██║██╔══██╗
+███████║██║   ██║██║   ██║███████║
+██╔══██║██║▄▄ ██║██║   ██║██╔══██║
+██║  ██║╚██████╔╝╚██████╔╝██║  ██║
+╚═╝  ╚═╝ ╚══▀▀═╝  ╚══▀▀═╝ ╚═╝  ╚═╝</div>
+
+        <h1>Enterprise <span>Multi-Agent</span><br>Framework</h1>
+
+        <p>Build, manage, and deploy AI agent teams with 80+ built-in tools, persistent memory, customizable personas, and full VPS management — all through a clean CLI.</p>
+
+        <div class="hero-actions">
+            <a href="#get-started" class="btn btn-primary">Get Started →</a>
+            <a href="https://github.com/galinaplinoel-stack/aqua" class="btn btn-secondary" target="_blank">View on GitHub</a>
+        </div>
+    </section>
+
+    <!-- Terminal -->
+    <div class="terminal-wrap">
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-dot"></div>
+                <div class="terminal-dot"></div>
+                <div class="terminal-dot"></div>
+                <span class="terminal-title">aqua — ~/project</span>
+            </div>
+            <div class="terminal-body">
+                <span class="comment"># Install AQUA</span><br>
+                <span class="prompt">$</span> <span class="cmd">git clone https://github.com/galinaplinoel-stack/aqua.git</span><br>
+                <span class="prompt">$</span> <span class="cmd">cd aqua && ./setup.sh</span><br><br>
+                <span class="comment"># Configure your LLM provider</span><br>
+                <span class="prompt">$</span> <span class="cmd">python3 main.py --setup</span><br>
+                <span class="output">✓ Provider: OpenAI | Model: gpt-4o</span><br><br>
+                <span class="comment"># Start AQUA</span><br>
+                <span class="prompt">$</span> <span class="cmd">python3 main.py</span><br>
+                <span class="output">💧 AQUA v1.0 — Enterprise Multi-Agent Framework</span><br>
+                <span class="output">🔧 80+ tools loaded | 💾 Memory: enabled</span><br><br>
+                <span class="prompt">AQUA&gt;</span> <span class="cmd">Create a developer agent and have it build a REST API</span><br>
+                <span class="output">🤖 Created agent: Senior Developer (Engineering)</span><br>
+                <span class="output">📋 Task assigned: Build REST API</span><br>
+                <span class="output">✅ Task completed successfully!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-num">80+</div>
+            <div class="stat-label">Built-in Tools</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">16</div>
+            <div class="stat-label">Tool Categories</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">∞</div>
+            <div class="stat-label">Sub-Agents</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">0$</div>
+            <div class="stat-label">Free & Open Source</div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section class="section" id="features">
+        <h2 class="section-title">Why AQUA?</h2>
+        <p class="section-sub">Everything you need to build and manage AI agent teams.</p>
+
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <h3>Multi-Agent Hierarchy</h3>
+                <p>Define departments, roles, and org charts. Spawn specialized sub-agents and delegate tasks autonomously.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔧</div>
+                <h3>80+ Built-in Tools</h3>
+                <p>Web scraping, code execution, database queries, file management, VPS control, and more — all ready to use.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎭</div>
+                <h3>Customizable Persona</h3>
+                <p>Edit a simple markdown file to define your agent's personality, rules, and behavior. No code changes needed.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                <h3>Persistent Memory</h3>
+                <p>Your agent remembers context, facts, and conversations across sessions. Search and manage memories easily.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🖥️</div>
+                <h3>Full VPS Management</h3>
+                <p>System info, process management, firewall rules, Docker, cron jobs, and package installation — all from chat.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h3>Platform Integration</h3>
+                <p>Connect to Telegram and other messaging platforms. Chat with your agents from anywhere.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tools -->
+    <section class="section" id="tools">
+        <h2 class="section-title">Tool Categories</h2>
+        <p class="section-sub">16 categories covering everything from web scraping to VPS management.</p>
+
+        <div class="tools-grid">
+            <div class="tool-tag">🌐 Web & Scraping</div>
+            <div class="tool-tag">🔌 HTTP & API</div>
+            <div class="tool-tag">💻 Code Execution</div>
+            <div class="tool-tag">📁 Git Integration</div>
+            <div class="tool-tag">🗄️ Database</div>
+            <div class="tool-tag">📄 File Formats</div>
+            <div class="tool-tag">📧 Email</div>
+            <div class="tool-tag">🖥️ Terminal & VPS</div>
+            <div class="tool-tag">📊 Monitoring</div>
+            <div class="tool-tag">💾 Caching</div>
+            <div class="tool-tag">⚙️ Workflow</div>
+            <div class="tool-tag">🔔 Notifications</div>
+            <div class="tool-tag">📅 Calendar</div>
+            <div class="tool-tag">🔌 Plugins</div>
+            <div class="tool-tag">🔐 Authentication</div>
+            <div class="tool-tag">🧠 Vector Memory</div>
+        </div>
+    </section>
+
+    <!-- Get Started -->
+    <section class="cta" id="get-started">
+        <h2>Get Started in Seconds</h2>
+        <p>Clone, configure, and run. It's that simple.</p>
+
+        <div class="terminal-wrap" style="padding-bottom:0; max-width:640px;">
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <span class="terminal-title">quick start</span>
+                </div>
+                <div class="terminal-body">
+                    <span class="prompt">$</span> <span class="cmd">git clone https://github.com/galinaplinoel-stack/aqua.git</span><br>
+                    <span class="prompt">$</span> <span class="cmd">cd aqua</span><br>
+                    <span class="prompt">$</span> <span class="cmd">./setup.sh</span><br>
+                    <span class="prompt">$</span> <span class="cmd">python3 main.py --quick-setup YOUR_API_KEY openai</span><br>
+                    <span class="prompt">$</span> <span class="cmd">python3 main.py</span><br>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <a href="https://github.com/galinaplinoel-stack/aqua" class="btn btn-primary" target="_blank">
+                ⭐ Star on GitHub
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>Built with 💧 by <a href="https://github.com/galinaplinoel-stack">galinaplinoel-stack</a> • MIT License</p>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Animate on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.feature, .stat, .tool-tag').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.5s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
