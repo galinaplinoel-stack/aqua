@@ -10,8 +10,9 @@ from rich.console import Console
 from rich.panel import Panel
 
 from agent.core import ChatEngine
+from agent.memory import Memory
 from agent.persona import Persona
-from agent.tools import create_default_registry
+from agent.tools import ToolRegistry, create_default_registry
 
 console = Console()
 
@@ -45,6 +46,18 @@ def run():
         tools = create_default_registry()
         console.print(f"[dim]Loaded {len(tools.tools)} tools[/dim]")
 
+    # Setup memory
+    memory = None
+    memory_config = config.get("memory", {})
+    if memory_config.get("enabled", False):
+        memory = Memory(
+            path=memory_config.get("path", "memory.json"),
+            enabled=True,
+        )
+        memory.increment_sessions()
+        stats = memory.get_stats()
+        console.print(f"[dim]Memory: {stats['facts']} facts, {stats['conversations']} conversations[/dim]")
+
     # Setup chat engine
     engine = ChatEngine(
         base_url=config["provider"]["base_url"],
@@ -52,12 +65,19 @@ def run():
         model=config["provider"]["model"],
         persona=persona,
         tools=tools,
+        memory=memory,
     )
 
     # Welcome banner
-    tool_info = f" + {len(tools.tools)} tools" if tools else ""
+    features = []
+    if tools:
+        features.append(f"{len(tools.tools)} tools")
+    if memory:
+        features.append("memory")
+    feature_info = f" ({', '.join(features)})" if features else ""
+
     console.print(Panel(
-        f"[bold cyan]{persona.name}[/bold cyan] is ready{tool_info}.\n"
+        f"[bold cyan]{persona.name}[/bold cyan] is ready{feature_info}.\n"
         "[dim]Type your message, /help for commands, or /quit to exit.[/dim]",
         title="🤖 AQUA",
         border_style="cyan",
@@ -81,20 +101,28 @@ def run():
 
         # Handle commands
         if user_input.startswith("/"):
-            cmd = user_input.strip().lower()
+            parts = user_input.strip().split(" ", 1)
+            cmd = parts[0].lower()
+            arg = parts[1] if len(parts) > 1 else ""
 
             if cmd == "/quit" or cmd == "/exit":
+                # Save conversation summary before exit
+                if memory:
+                    engine.summarize_and_save()
                 console.print("[dim]Goodbye![/dim]")
                 break
 
             elif cmd == "/help":
                 console.print(Panel(
-                    "/help     — Show this help\n"
-                    "/clear    — Clear conversation history\n"
-                    "/reload   — Reload persona from Aqua.md\n"
-                    "/history  — Show message count\n"
-                    "/tools    — List available tools\n"
-                    "/quit     — Exit",
+                    "/help        — Show this help\n"
+                    "/clear       — Clear conversation history\n"
+                    "/reload      — Reload persona from Aqua.md\n"
+                    "/history     — Show message count\n"
+                    "/tools       — List available tools\n"
+                    "/remember X  — Save a fact to memory\n"
+                    "/memory      — Show memory stats\n"
+                    "/search X    — Search memory\n"
+                    "/quit        — Exit",
                     title="Commands",
                     border_style="dim",
                 ))
@@ -109,7 +137,7 @@ def run():
                 console.print("[green]Persona reloaded from Aqua.md[/green]")
 
             elif cmd == "/history":
-                count = len(engine.get_history()) - 1  # exclude system
+                count = len(engine.get_history()) - 1
                 console.print(f"[dim]{count} messages in history[/dim]")
 
             elif cmd == "/tools":
@@ -118,6 +146,42 @@ def run():
                         console.print(f"  [cyan]{name}[/cyan]: {tool.description}")
                 else:
                     console.print("[dim]No tools loaded. Enable in config.yaml[/dim]")
+
+            elif cmd == "/remember":
+                if not memory:
+                    console.print("[yellow]Memory not enabled[/yellow]")
+                elif not arg:
+                    console.print("[yellow]Usage: /remember <fact>[/yellow]")
+                else:
+                    memory.add_fact(arg)
+                    console.print(f"[green]Remembered: {arg}[/green]")
+
+            elif cmd == "/memory":
+                if not memory:
+                    console.print("[yellow]Memory not enabled[/yellow]")
+                else:
+                    stats = memory.get_stats()
+                    console.print(Panel(
+                        f"Facts: {stats['facts']}\n"
+                        f"Conversations: {stats['conversations']}\n"
+                        f"Sessions: {stats['sessions']}\n"
+                        f"Created: {stats['created']}",
+                        title="Memory Stats",
+                        border_style="dim",
+                    ))
+
+            elif cmd == "/search":
+                if not memory:
+                    console.print("[yellow]Memory not enabled[/yellow]")
+                elif not arg:
+                    console.print("[yellow]Usage: /search <query>[/yellow]")
+                else:
+                    results = memory.search(arg)
+                    if results:
+                        for r in results:
+                            console.print(f"  [{r['type']}] {r['content']}")
+                    else:
+                        console.print("[dim]No results found[/dim]")
 
             else:
                 console.print(f"[yellow]Unknown command: {cmd}[/yellow]")

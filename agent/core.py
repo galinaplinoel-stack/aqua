@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from agent.memory import Memory
 from agent.persona import Persona
 from agent.tools import ToolRegistry
 
@@ -12,7 +13,7 @@ console = Console()
 
 
 class ChatEngine:
-    """Core chat engine with OpenAI-compatible API and tool support."""
+    """Core chat engine with OpenAI-compatible API, tools, and memory."""
 
     def __init__(
         self,
@@ -21,17 +22,26 @@ class ChatEngine:
         model: str,
         persona: Persona,
         tools: ToolRegistry | None = None,
+        memory: Memory | None = None,
     ):
         self.client = OpenAI(base_url=base_url, api_key=api_key)
         self.model = model
         self.persona = persona
         self.tools = tools
+        self.memory = memory
         self.messages: list[dict] = []
         self._init_system_prompt()
 
     def _init_system_prompt(self):
-        """Set up system prompt from persona."""
+        """Set up system prompt from persona + memory context."""
         system_prompt = self.persona.system_prompt
+
+        # Inject memory context if available
+        if self.memory:
+            context = self.memory.get_context_string()
+            if context:
+                system_prompt += f"\n\n{context}"
+
         self.messages = [{"role": "system", "content": system_prompt}]
 
     def _get_tools_param(self) -> list[dict] | None:
@@ -58,7 +68,6 @@ class ChatEngine:
 
             # Handle tool calls
             if message.tool_calls:
-                # Append assistant message with tool calls
                 self.messages.append(message.model_dump())
 
                 for tool_call in message.tool_calls:
@@ -71,17 +80,15 @@ class ChatEngine:
                     else:
                         result = "Error: Tools not available"
 
-                    # Append tool result
                     self.messages.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": result,
                     })
 
-                # Continue conversation after tool execution
                 return self._run_conversation()
 
-            # Regular response (no tool calls)
+            # Regular response
             full_response = message.content or ""
 
             console.print()
@@ -97,7 +104,6 @@ class ChatEngine:
 
         except Exception as e:
             console.print(f"[red]Error: {e}[/red]")
-            # Remove the failed user message
             if self.messages and self.messages[-1]["role"] == "user":
                 self.messages.pop()
             return ""
@@ -109,3 +115,31 @@ class ChatEngine:
     def get_history(self) -> list[dict]:
         """Get conversation history."""
         return self.messages.copy()
+
+    def summarize_and_save(self):
+        """Summarize conversation and save to memory."""
+        if not self.memory:
+            return
+
+        # Count user messages
+        user_msgs = [m for m in self.messages if m.get("role") == "user"]
+        if len(user_msgs) < 2:
+            return
+
+        # Ask LLM to summarize
+        summary_messages = self.messages.copy()
+        summary_messages.append({
+            "role": "user",
+            "content": "Summarize this conversation in 2-3 sentences. Focus on key topics, decisions, and facts discussed. Be concise.",
+        })
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=summary_messages,
+            )
+            summary = response.choices[0].message.content or "No summary"
+            self.memory.add_conversation_summary(summary, len(user_msgs))
+            console.print(f"[dim]💾 Conversation saved to memory[/dim]")
+        except Exception as e:
+            console.print(f"[dim]Could not save summary: {e}[/dim]")
