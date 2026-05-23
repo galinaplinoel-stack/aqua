@@ -4,13 +4,9 @@ import sys
 from pathlib import Path
 
 import yaml
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.shortcuts import radiolist_dialog
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
-from rich.text import Text
 
 console = Console()
 
@@ -53,26 +49,8 @@ def save_config(config: dict):
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
 
-def _select_provider_arrow() -> str:
-    """Arrow key provider selection using prompt_toolkit radiolist dialog."""
-    values = [
-        ("1", "1 — OpenAI (api.openai.com)"),
-        ("2", "2 — OpenRouter (openrouter.ai)"),
-        ("3", "3 — Together (api.together.xyz)"),
-        ("4", "4 — Groq (api.groq.com)"),
-        ("5", "5 — Custom (enter manually)"),
-        ("6", "6 — Xiaomi MiMo (api.mimo.ai)"),
-    ]
-    result = radiolist_dialog(
-        title="📡 LLM Provider",
-        text="Use arrow keys to select, Enter to confirm:",
-        values=values,
-    ).run()
-    return result if result else "1"
-
-
 def setup_wizard():
-    """Interactive setup wizard with arrow key selection."""
+    """Interactive setup wizard — simple text prompts like Hermes."""
     # Show big banner
     console.print(AQUA_BANNER)
 
@@ -86,21 +64,28 @@ def setup_wizard():
 
     config = load_config()
 
-    # === STEP 1: Provider selection (arrow keys) ===
+    # === STEP 1: Provider selection (simple numbered list) ===
     console.print("\n[bold]📡 LLM Provider[/bold]")
     console.print("[dim]Supported: OpenAI, OpenRouter, Together, Groq, or any OpenAI-compatible API[/dim]\n")
 
-    provider_choice = _select_provider_arrow()
+    console.print("  [cyan]1[/cyan] — OpenAI (api.openai.com)")
+    console.print("  [cyan]2[/cyan] — OpenRouter (openrouter.ai)")
+    console.print("  [cyan]3[/cyan] — Together (api.together.xyz)")
+    console.print("  [cyan]4[/cyan] — Groq (api.groq.com)")
+    console.print("  [cyan]5[/cyan] — Custom (enter manually)")
+    console.print("  [cyan]6[/cyan] — Xiaomi MiMo (api.mimo.ai)\n")
 
-    if provider_choice is None:
-        console.print("[red]No provider selected. Using OpenAI.[/red]")
-        provider_choice = "1"
+    provider_choice = Prompt.ask(
+        "Select provider",
+        default="1",
+        choices=["1", "2", "3", "4", "5", "6"],
+    )
 
     selected = PROVIDERS[provider_choice]
 
     # === STEP 2: API Key ===
-    console.print("\n[bold]🔑 API Key[/bold]")
-    api_key = Prompt.ask("Enter your API key (paste here)", password=True)
+    console.print()
+    api_key = Prompt.ask("🔑 API Key", password=True)
 
     if not api_key:
         console.print("[red]API key is required![/red]")
@@ -108,34 +93,34 @@ def setup_wizard():
 
     # === STEP 3: Base URL ===
     if provider_choice == "5":
-        base_url = Prompt.ask("Enter API base URL")
+        base_url = Prompt.ask("Base URL")
     else:
-        base_url = Prompt.ask("API base URL", default=selected["base_url"])
+        base_url = Prompt.ask("Base URL", default=selected["base_url"])
 
     # === STEP 4: Model ===
     if provider_choice == "5":
-        model = Prompt.ask("Enter model name")
+        model = Prompt.ask("Model name")
     else:
-        model = Prompt.ask("Model name", default=selected["model"])
+        model = Prompt.ask("Model", default=selected["model"])
 
     # === Persona configuration ===
-    console.print("\n[bold]🎭 Persona Configuration[/bold]")
+    console.print("\n[bold]🎭 Persona[/bold]")
     persona_name = Prompt.ask("Agent name", default="AQUA")
-    persona_path = Prompt.ask("Persona file path", default="Aqua.md")
+    persona_path = Prompt.ask("Persona file", default="Aqua.md")
 
     # === Memory configuration ===
-    console.print("\n[bold]💾 Memory Configuration[/bold]")
+    console.print("\n[bold]💾 Memory[/bold]")
     memory_enabled = Confirm.ask("Enable persistent memory?", default=True)
     memory_path = "memory.json"
     if memory_enabled:
-        memory_path = Prompt.ask("Memory file path", default="memory.json")
+        memory_path = Prompt.ask("Memory file", default="memory.json")
 
     # === Tools configuration ===
-    console.print("\n[bold]🔧 Tools Configuration[/bold]")
+    console.print("\n[bold]🔧 Tools[/bold]")
     tools_enabled = Confirm.ask("Enable tools?", default=True)
 
     # === Hierarchy configuration ===
-    console.print("\n[bold]🏢 Multi-Agent Hierarchy[/bold]")
+    console.print("\n[bold]🏢 Multi-Agent[/bold]")
     hierarchy_enabled = Confirm.ask("Enable company hierarchy & sub-agents?", default=True)
 
     # Build config
@@ -176,17 +161,17 @@ def setup_wizard():
     import os
     os.chmod(CONFIG_PATH, 0o600)
 
-    # Show success with banner
+    # Show success
     console.print(AQUA_BANNER)
     console.print(Panel(
         f"[green]✓ Configuration saved![/green]\n\n"
-        f"Provider: [cyan]{selected['name']}[/cyan]\n"
-        f"Base URL: [cyan]{base_url}[/cyan]\n"
-        f"Model: [cyan]{model}[/cyan]\n"
-        f"Persona: [cyan]{persona_name}[/cyan]\n"
-        f"Memory: [cyan]{'✓' if memory_enabled else '✗'}[/cyan]\n"
-        f"Tools: [cyan]{'✓' if tools_enabled else '✗'}[/cyan]\n"
-        f"Hierarchy: [cyan]{'✓' if hierarchy_enabled else '✗'}[/cyan]\n\n"
+        f"Provider : [cyan]{selected['name']}[/cyan]\n"
+        f"Base URL : [cyan]{base_url}[/cyan]\n"
+        f"Model    : [cyan]{model}[/cyan]\n"
+        f"Persona  : [cyan]{persona_name}[/cyan]\n"
+        f"Memory   : [cyan]{'✓' if memory_enabled else '✗'}[/cyan]\n"
+        f"Tools    : [cyan]{'✓' if tools_enabled else '✗'}[/cyan]\n"
+        f"Multi-Agent: [cyan]{'✓' if hierarchy_enabled else '✗'}[/cyan]\n\n"
         f"[dim]Run [bold]python3 main.py[/bold] to start![/dim]",
         title="✅ Setup Complete",
         border_style="green",
@@ -197,7 +182,6 @@ def set_config(key: str, value: str):
     """Set a config value directly."""
     config = load_config()
 
-    # Parse dotted key (e.g., "provider.api_key")
     keys = key.split(".")
     target = config
     for k in keys[:-1]:
@@ -205,7 +189,6 @@ def set_config(key: str, value: str):
             target[k] = {}
         target = target[k]
 
-    # Convert value types
     if value.lower() in ("true", "yes", "1"):
         value = True
     elif value.lower() in ("false", "no", "0"):
@@ -216,7 +199,6 @@ def set_config(key: str, value: str):
     target[keys[-1]] = value
     save_config(config)
 
-    # Secure the file
     import os
     os.chmod(CONFIG_PATH, 0o600)
 
@@ -231,7 +213,6 @@ def show_config():
         console.print("[yellow]No config found. Run: python3 main.py --setup[/yellow]")
         return
 
-    # Mask API key
     if "provider" in config and "api_key" in config["provider"]:
         key = config["provider"]["api_key"]
         if len(key) > 8:
@@ -277,7 +258,6 @@ def quick_setup(api_key: str, provider: str = "openai", model: str = ""):
 
     save_config(config)
 
-    # Secure the file
     import os
     os.chmod(CONFIG_PATH, 0o600)
 
@@ -297,7 +277,6 @@ def config_cli():
         if len(args) == 1:
             show_config()
         elif len(args) == 2:
-            # Show specific value
             config = load_config()
             keys = args[1].split(".")
             target = config
