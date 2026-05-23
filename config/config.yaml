@@ -1,48 +1,20 @@
-provider:
-  base_url: "https://api.openai.com/v1"
-  api_key: "your-key-here"
-  model: "gpt-4o"
-
-persona:
-  name: "AQUA"
-  path: "Aqua.md"
-
-memory:
-  enabled: true
-  path: "memory.json"
-
-tools:
-  enabled: true
-  # Tool categories to load (leave empty for all)
-  categories: []
-  # Available: web, http, code_exec, git, database, file_formats,
-  #            email, terminal, monitoring, caching, workflow, notifications,
-  #            calendar, plugins, auth, vector_memory
-
-# Company hierarchy and multi-agent system
+agents:
+  path: agents
+delegation:
+  path: delegations.json
 hierarchy:
   enabled: true
-  path: "hierarchy.json"
-
-# Agent storage
-agents:
-  path: "agents"
-
-# Task delegation
-delegation:
-  path: "delegations.json"
-
-# Plugins directory
-plugins:
-  path: "plugins"
-
-# Auth credentials (stored securely)
-auth:
-  path: ".auth.json"
-
-platforms:
-  # Uncomment to enable Telegram bot
-  # telegram:
-  #   token: "your-bot-token"
-  #   allowed_chat_ids:
-  #     - "your-chat-id"
+  path: hierarchy.json
+memory:
+  enabled: true
+  path: memory.json
+persona:
+  name: AQUA
+  path: Aqua.md
+provider:
+  api_key: sk-test-key
+  base_url: https://api.openai.com/v1
+  model: gpt-4o
+tools:
+  categories: []
+  enabled: true

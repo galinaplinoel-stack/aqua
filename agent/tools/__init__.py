@@ -1,5 +1,8 @@
 """AQUA Tools - Comprehensive tool collection."""
 
+import json
+from typing import Callable
+
 from agent.tools.web import WEB_SEARCH_TOOLS
 from agent.tools.http import HTTP_TOOLS
 from agent.tools.code_exec import CODE_EXEC_TOOLS
@@ -50,3 +53,86 @@ def get_all_tools() -> dict:
 def get_tools_by_category(category: str) -> dict:
     """Get tools for a specific category."""
     return ALL_TOOL_CATEGORIES.get(category, {})
+
+
+# Tool class
+class Tool:
+    """Represents a single tool."""
+
+    def __init__(self, name: str, description: str, parameters: dict, func: Callable):
+        self.name = name
+        self.description = description
+        self.parameters = parameters
+        self.func = func
+
+    def to_openai_schema(self) -> dict:
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters,
+            },
+        }
+
+    def execute(self, **kwargs) -> str:
+        try:
+            return self.func(**kwargs)
+        except Exception as e:
+            return f"Error: {e}"
+
+
+# ToolRegistry class
+class ToolRegistry:
+    """Registry for managing tools."""
+
+    def __init__(self):
+        self.tools: dict[str, Tool] = {}
+
+    def register(self, tool: Tool):
+        self.tools[tool.name] = tool
+
+    def register_dynamic(self, name: str, func: Callable, schema: dict):
+        self.tools[name] = Tool(
+            name=name,
+            description=schema["function"]["description"],
+            parameters=schema["function"]["parameters"],
+            func=func,
+        )
+
+    def register_batch(self, tools_dict: dict):
+        for name, tool_data in tools_dict.items():
+            self.register_dynamic(name, tool_data["func"], tool_data["schema"])
+
+    def get(self, name: str) -> Tool | None:
+        return self.tools.get(name)
+
+    def get_schemas(self) -> list[dict]:
+        return [tool.to_openai_schema() for tool in self.tools.values()]
+
+    def execute(self, name: str, arguments: str) -> str:
+        tool = self.get(name)
+        if not tool:
+            return f"Unknown tool: {name}"
+        try:
+            args = json.loads(arguments) if isinstance(arguments, str) else arguments
+            return tool.execute(**args)
+        except json.JSONDecodeError:
+            return f"Invalid JSON arguments: {arguments}"
+
+    def list_tools(self) -> list[dict]:
+        return [{"name": t.name, "description": t.description} for t in self.tools.values()]
+
+
+def create_registry(categories: list[str] | None = None) -> ToolRegistry:
+    """Create a tool registry with specified categories."""
+    registry = ToolRegistry()
+
+    if categories:
+        for cat in categories:
+            if cat in ALL_TOOL_CATEGORIES:
+                registry.register_batch(ALL_TOOL_CATEGORIES[cat])
+    else:
+        registry.register_batch(get_all_tools())
+
+    return registry
