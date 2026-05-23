@@ -1,0 +1,29 @@
+# AQUA Configuration
+# Copy this file to config/config.yaml and fill in your values
+
+provider:
+  base_url: "https://api.openai.com/v1"
+  api_key: "YOUR_API_KEY_HERE"
+  model: "gpt-4o"
+
+persona:
+  name: "AQUA"
+  path: "Aqua.md"
+
+memory:
+  enabled: true
+  path: "memory.json"
+
+tools:
+  enabled: true
+  categories: []
+
+hierarchy:
+  enabled: true
+  path: "hierarchy.json"
+
+agents:
+  path: "agents"
+
+delegation:
+  path: "delegations.json"

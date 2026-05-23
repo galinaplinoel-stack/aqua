@@ -10,3 +10,5 @@ agents/
 *.db
 *.db-wal
 .auth.json
+config/config.yaml
+.env
