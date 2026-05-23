@@ -10,50 +10,169 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
         :root {
-            --bg: #0a0e17;
-            --bg-card: #111827;
-            --border: #1e293b;
-            --text: #e2e8f0;
-            --text-dim: #64748b;
+            --bg: #020b18;
+            --bg-card: rgba(6, 30, 65, 0.7);
+            --border: rgba(6, 182, 212, 0.15);
+            --text: #c8e6ff;
+            --text-dim: #5a8db5;
             --accent: #06b6d4;
             --accent-glow: rgba(6, 182, 212, 0.3);
             --accent2: #8b5cf6;
             --accent3: #10b981;
-            --gradient: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            --gradient: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
+            background: linear-gradient(180deg, #020b18 0%, #031634 30%, #042450 60%, #053066 80%, #063a7a 100%);
             color: var(--text);
             overflow-x: hidden;
             line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
         }
 
-        /* Animated background */
-        .bg-grid {
+        /* === UNDERWATER OCEAN BACKGROUND === */
+        .ocean-bg {
             position: fixed;
             inset: 0;
-            background-image:
-                linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            pointer-events: none;
             z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
 
-        .bg-glow {
+        /* Light rays from surface */
+        .light-rays {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background:
+                linear-gradient(170deg, rgba(6, 182, 212, 0.06) 0%, transparent 40%),
+                linear-gradient(190deg, rgba(59, 130, 246, 0.05) 0%, transparent 35%),
+                linear-gradient(160deg, rgba(6, 182, 212, 0.04) 0%, transparent 45%),
+                linear-gradient(200deg, rgba(139, 92, 246, 0.03) 0%, transparent 30%);
+            animation: raysSway 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes raysSway {
+            0% { transform: skewX(-2deg); opacity: 0.7; }
+            100% { transform: skewX(2deg); opacity: 1; }
+        }
+
+        /* Caustic light pattern */
+        .caustics {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background:
+                radial-gradient(ellipse 200px 100px at 20% 30%, rgba(6, 182, 212, 0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 150px 80px at 60% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 70%),
+                radial-gradient(ellipse 180px 90px at 80% 40%, rgba(6, 182, 212, 0.03) 0%, transparent 70%),
+                radial-gradient(ellipse 120px 60px at 40% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 70%);
+            animation: causticsMove 12s ease-in-out infinite;
+        }
+
+        @keyframes causticsMove {
+            0%, 100% { transform: translateX(0) scale(1); }
+            25% { transform: translateX(20px) scale(1.02); }
+            50% { transform: translateX(-15px) scale(0.98); }
+            75% { transform: translateX(10px) scale(1.01); }
+        }
+
+        /* === BUBBLES === */
+        .bubbles-container {
             position: fixed;
-            top: -200px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+            inset: 0;
+            z-index: 1;
             pointer-events: none;
-            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), rgba(6, 182, 212, 0.05) 50%, transparent 70%);
+            border: 1px solid rgba(255,255,255,0.08);
+            animation: bubbleRise linear infinite;
+            box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.05);
+        }
+
+        .bubble::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 25%;
+            height: 25%;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            filter: blur(1px);
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(100vh) translateX(0) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) translateX(var(--drift)) scale(0.6);
+                opacity: 0;
+            }
+        }
+
+        /* Seaweed at bottom */
+        .seaweed {
+            position: fixed;
+            bottom: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .seaweed svg {
+            position: absolute;
+            bottom: 0;
+        }
+
+        /* Particle overlay */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(6, 182, 212, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-20px) translateX(50px); opacity: 0; }
+        }
+
+        /* === CONTENT === */
+        .content {
+            position: relative;
+            z-index: 10;
         }
 
         /* Nav */
@@ -68,7 +187,7 @@
             justify-content: space-between;
             align-items: center;
             backdrop-filter: blur(20px);
-            background: rgba(10, 14, 23, 0.8);
+            background: rgba(2, 11, 24, 0.7);
             border-bottom: 1px solid var(--border);
         }
 
@@ -109,12 +228,13 @@
             font-size: 0.85rem;
             font-weight: 500;
             transition: all 0.2s;
-            background: rgba(255,255,255,0.03);
+            background: rgba(6, 182, 212, 0.05);
+            backdrop-filter: blur(10px);
         }
 
         .btn-github:hover {
             border-color: var(--accent);
-            background: rgba(6, 182, 212, 0.05);
+            background: rgba(6, 182, 212, 0.1);
         }
 
         .btn-github svg {
@@ -126,7 +246,7 @@
         /* Hero */
         .hero {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -143,7 +263,8 @@
             padding: 6px 16px;
             border-radius: 100px;
             border: 1px solid rgba(6, 182, 212, 0.2);
-            background: rgba(6, 182, 212, 0.05);
+            background: rgba(6, 182, 212, 0.08);
+            backdrop-filter: blur(10px);
             color: var(--accent);
             font-size: 0.8rem;
             font-weight: 500;
@@ -169,6 +290,7 @@
             white-space: pre;
             margin-bottom: 24px;
             animation: fadeInUp 0.6s ease 0.1s both;
+            filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.3));
         }
 
         .hero h1 {
@@ -218,29 +340,30 @@
         .btn-primary {
             background: var(--gradient);
             color: white;
-            box-shadow: 0 0 30px var(--accent-glow);
+            box-shadow: 0 0 30px var(--accent-glow), 0 0 60px rgba(6, 182, 212, 0.1);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 50px var(--accent-glow);
+            box-shadow: 0 0 50px var(--accent-glow), 0 0 100px rgba(6, 182, 212, 0.15);
         }
 
         .btn-secondary {
-            background: var(--bg-card);
+            background: rgba(6, 30, 65, 0.5);
             color: var(--text);
             border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
         }
 
         .btn-secondary:hover {
             border-color: var(--accent);
-            background: rgba(6, 182, 212, 0.05);
+            background: rgba(6, 182, 212, 0.1);
         }
 
         /* Terminal preview */
         .terminal-wrap {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             max-width: 720px;
             margin: 0 auto;
             padding: 0 24px 80px;
@@ -248,11 +371,12 @@
         }
 
         .terminal {
-            background: #0d1117;
+            background: rgba(4, 12, 28, 0.9);
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(6, 182, 212, 0.05);
+            backdrop-filter: blur(20px);
         }
 
         .terminal-header {
@@ -260,7 +384,7 @@
             align-items: center;
             gap: 8px;
             padding: 12px 16px;
-            background: rgba(255,255,255,0.02);
+            background: rgba(6, 182, 212, 0.03);
             border-bottom: 1px solid var(--border);
         }
 
@@ -297,7 +421,7 @@
         /* Stats */
         .stats {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 24px;
@@ -312,12 +436,14 @@
             border-radius: 12px;
             border: 1px solid var(--border);
             background: var(--bg-card);
+            backdrop-filter: blur(15px);
             transition: all 0.3s;
         }
 
         .stat:hover {
             border-color: var(--accent);
             transform: translateY(-4px);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
         }
 
         .stat-num {
@@ -337,7 +463,7 @@
         /* Features */
         .section {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             max-width: 1100px;
             margin: 0 auto;
             padding: 0 24px 100px;
@@ -368,12 +494,14 @@
             border-radius: 12px;
             border: 1px solid var(--border);
             background: var(--bg-card);
+            backdrop-filter: blur(15px);
             transition: all 0.3s;
         }
 
         .feature:hover {
             border-color: var(--accent);
             transform: translateY(-4px);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.08);
         }
 
         .feature-icon {
@@ -412,6 +540,7 @@
             border-radius: 8px;
             border: 1px solid var(--border);
             background: var(--bg-card);
+            backdrop-filter: blur(10px);
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.78rem;
             color: var(--text-dim);
@@ -422,12 +551,13 @@
         .tool-tag:hover {
             border-color: var(--accent);
             color: var(--accent);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.08);
         }
 
         /* CTA */
         .cta {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             text-align: center;
             padding: 100px 24px;
         }
@@ -447,12 +577,14 @@
         /* Footer */
         footer {
             position: relative;
-            z-index: 1;
+            z-index: 10;
             text-align: center;
             padding: 40px 24px;
             border-top: 1px solid var(--border);
             color: var(--text-dim);
             font-size: 0.85rem;
+            background: rgba(2, 11, 24, 0.5);
+            backdrop-filter: blur(10px);
         }
 
         footer a {
@@ -488,195 +620,335 @@
     </style>
 </head>
 <body>
-    <div class="bg-grid"></div>
-    <div class="bg-glow"></div>
+    <!-- Underwater Ocean Background -->
+    <div class="ocean-bg">
+        <div class="light-rays"></div>
+        <div class="caustics"></div>
+    </div>
 
-    <!-- Nav -->
-    <nav>
-        <div class="nav-logo">AQUA</div>
-        <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#tools">Tools</a>
-            <a href="#get-started">Get Started</a>
-            <a href="https://github.com/galinaplinoel-stack/aqua" class="btn-github" target="_blank">
-                <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-                GitHub
-            </a>
-        </div>
-    </nav>
+    <!-- Bubbles -->
+    <div class="bubbles-container" id="bubbles"></div>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-badge">
-            <span class="dot"></span>
-            Open Source • v1.0
-        </div>
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
 
-        <div class="hero-ascii"> █████╗  ██████╗ ██╗   ██╗ █████╗ 
+    <!-- Seaweed at bottom -->
+    <div class="seaweed">
+        <svg width="100%" height="200" viewBox="0 0 1440 200" preserveAspectRatio="none" style="opacity:0.15">
+            <path d="M0,200 Q100,120 50,80 Q30,40 80,60 Q130,80 100,140 Q80,180 150,200" fill="none" stroke="#06b6d4" stroke-width="2">
+                <animate attributeName="d" dur="8s" repeatCount="indefinite"
+                    values="M0,200 Q100,120 50,80 Q30,40 80,60 Q130,80 100,140 Q80,180 150,200;
+                            M0,200 Q80,140 60,90 Q40,50 90,70 Q140,90 110,150 Q90,190 160,200;
+                            M0,200 Q100,120 50,80 Q30,40 80,60 Q130,80 100,140 Q80,180 150,200"/>
+            </path>
+            <path d="M200,200 Q280,150 250,100 Q230,60 280,80 Q320,100 300,160 Q280,190 350,200" fill="none" stroke="#3b82f6" stroke-width="1.5">
+                <animate attributeName="d" dur="10s" repeatCount="indefinite"
+                    values="M200,200 Q280,150 250,100 Q230,60 280,80 Q320,100 300,160 Q280,190 350,200;
+                            M200,200 Q260,160 240,110 Q220,70 270,90 Q310,110 290,170 Q270,195 340,200;
+                            M200,200 Q280,150 250,100 Q230,60 280,80 Q320,100 300,160 Q280,190 350,200"/>
+            </path>
+            <path d="M400,200 Q460,140 430,90 Q410,50 460,70 Q510,90 480,150 Q460,185 530,200" fill="none" stroke="#8b5cf6" stroke-width="2">
+                <animate attributeName="d" dur="7s" repeatCount="indefinite"
+                    values="M400,200 Q460,140 430,90 Q410,50 460,70 Q510,90 480,150 Q460,185 530,200;
+                            M400,200 Q480,130 440,80 Q420,40 470,60 Q520,80 490,140 Q470,180 540,200;
+                            M400,200 Q460,140 430,90 Q410,50 460,70 Q510,90 480,150 Q460,185 530,200"/>
+            </path>
+            <path d="M600,200 Q680,130 650,80 Q630,40 680,60 Q730,80 700,140 Q680,180 750,200" fill="none" stroke="#06b6d4" stroke-width="1.5" opacity="0.7">
+                <animate attributeName="d" dur="9s" repeatCount="indefinite"
+                    values="M600,200 Q680,130 650,80 Q630,40 680,60 Q730,80 700,140 Q680,180 750,200;
+                            M600,200 Q660,140 640,90 Q620,50 670,70 Q720,90 690,150 Q670,185 740,200;
+                            M600,200 Q680,130 650,80 Q630,40 680,60 Q730,80 700,140 Q680,180 750,200"/>
+            </path>
+            <path d="M800,200 Q880,140 850,90 Q830,50 880,70 Q930,90 900,150 Q880,185 950,200" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.6">
+                <animate attributeName="d" dur="11s" repeatCount="indefinite"
+                    values="M800,200 Q880,140 850,90 Q830,50 880,70 Q930,90 900,150 Q880,185 950,200;
+                            M800,200 Q860,150 840,100 Q820,60 870,80 Q920,100 890,160 Q870,190 940,200;
+                            M800,200 Q880,140 850,90 Q830,50 880,70 Q930,90 900,150 Q880,185 950,200"/>
+            </path>
+            <path d="M1000,200 Q1060,140 1040,90 Q1020,50 1070,70 Q1120,90 1100,150 Q1080,185 1150,200" fill="none" stroke="#8b5cf6" stroke-width="1.5" opacity="0.5">
+                <animate attributeName="d" dur="8s" repeatCount="indefinite"
+                    values="M1000,200 Q1060,140 1040,90 Q1020,50 1070,70 Q1120,90 1100,150 Q1080,185 1150,200;
+                            M1000,200 Q1080,130 1050,80 Q1030,40 1080,60 Q1130,80 1110,140 Q1090,180 1160,200;
+                            M1000,200 Q1060,140 1040,90 Q1020,50 1070,70 Q1120,90 1100,150 Q1080,185 1150,200"/>
+            </path>
+            <path d="M1200,200 Q1260,150 1240,100 Q1220,60 1270,80 Q1320,100 1300,160 Q1280,190 1350,200" fill="none" stroke="#06b6d4" stroke-width="2" opacity="0.4">
+                <animate attributeName="d" dur="6s" repeatCount="indefinite"
+                    values="M1200,200 Q1260,150 1240,100 Q1220,60 1270,80 Q1320,100 1300,160 Q1280,190 1350,200;
+                            M1200,200 Q1280,140 1250,90 Q1230,50 1280,70 Q1330,90 1310,150 Q1290,185 1360,200;
+                            M1200,200 Q1260,150 1240,100 Q1220,60 1270,80 Q1320,100 1300,160 Q1280,190 1350,200"/>
+            </path>
+        </svg>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Nav -->
+        <nav>
+            <div class="nav-logo">💧 AQUA</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#tools">Tools</a>
+                <a href="#get-started">Get Started</a>
+                <a href="https://github.com/galinaplinoel-stack/aqua" class="btn-github" target="_blank">
+                    <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    GitHub
+                </a>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Open Source • v1.0
+            </div>
+
+            <div class="hero-ascii"> █████╗  ██████╗ ██╗   ██╗ █████╗ 
 ██╔══██╗██╔═══██╗██║   ██║██╔══██╗
 ███████║██║   ██║██║   ██║███████║
 ██╔══██║██║▄▄ ██║██║   ██║██╔══██║
 ██║  ██║╚██████╔╝╚██████╔╝██║  ██║
 ╚═╝  ╚═╝ ╚══▀▀═╝  ╚══▀▀═╝ ╚═╝  ╚═╝</div>
 
-        <h1>Enterprise <span>Multi-Agent</span><br>Framework</h1>
+            <h1>Enterprise <span>Multi-Agent</span><br>Framework</h1>
 
-        <p>Build, manage, and deploy AI agent teams with 80+ built-in tools, persistent memory, customizable personas, and full VPS management — all through a clean CLI.</p>
+            <p>Build, manage, and deploy AI agent teams with 80+ built-in tools, persistent memory, customizable personas, and full VPS management — all through a clean CLI.</p>
 
-        <div class="hero-actions">
-            <a href="#get-started" class="btn btn-primary">Get Started →</a>
-            <a href="https://github.com/galinaplinoel-stack/aqua" class="btn btn-secondary" target="_blank">View on GitHub</a>
-        </div>
-    </section>
-
-    <!-- Terminal -->
-    <div class="terminal-wrap">
-        <div class="terminal">
-            <div class="terminal-header">
-                <div class="terminal-dot"></div>
-                <div class="terminal-dot"></div>
-                <div class="terminal-dot"></div>
-                <span class="terminal-title">aqua — ~/project</span>
+            <div class="hero-actions">
+                <a href="#get-started" class="btn btn-primary">Get Started →</a>
+                <a href="https://github.com/galinaplinoel-stack/aqua" class="btn btn-secondary" target="_blank">View on GitHub</a>
             </div>
-            <div class="terminal-body">
-                <span class="comment"># Install AQUA</span><br>
-                <span class="prompt">$</span> <span class="cmd">git clone https://github.com/galinaplinoel-stack/aqua.git</span><br>
-                <span class="prompt">$</span> <span class="cmd">cd aqua && ./setup.sh</span><br><br>
-                <span class="comment"># Configure your LLM provider</span><br>
-                <span class="prompt">$</span> <span class="cmd">python3 main.py --setup</span><br>
-                <span class="output">✓ Provider: OpenAI | Model: gpt-4o</span><br><br>
-                <span class="comment"># Start AQUA</span><br>
-                <span class="prompt">$</span> <span class="cmd">python3 main.py</span><br>
-                <span class="output">💧 AQUA v1.0 — Enterprise Multi-Agent Framework</span><br>
-                <span class="output">🔧 80+ tools loaded | 💾 Memory: enabled</span><br><br>
-                <span class="prompt">AQUA&gt;</span> <span class="cmd">Create a developer agent and have it build a REST API</span><br>
-                <span class="output">🤖 Created agent: Senior Developer (Engineering)</span><br>
-                <span class="output">📋 Task assigned: Build REST API</span><br>
-                <span class="output">✅ Task completed successfully!</span>
-            </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Stats -->
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-num">80+</div>
-            <div class="stat-label">Built-in Tools</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">16</div>
-            <div class="stat-label">Tool Categories</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">∞</div>
-            <div class="stat-label">Sub-Agents</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">0$</div>
-            <div class="stat-label">Free & Open Source</div>
-        </div>
-    </div>
-
-    <!-- Features -->
-    <section class="section" id="features">
-        <h2 class="section-title">Why AQUA?</h2>
-        <p class="section-sub">Everything you need to build and manage AI agent teams.</p>
-
-        <div class="features-grid">
-            <div class="feature">
-                <div class="feature-icon">🤖</div>
-                <h3>Multi-Agent Hierarchy</h3>
-                <p>Define departments, roles, and org charts. Spawn specialized sub-agents and delegate tasks autonomously.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🔧</div>
-                <h3>80+ Built-in Tools</h3>
-                <p>Web scraping, code execution, database queries, file management, VPS control, and more — all ready to use.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🎭</div>
-                <h3>Customizable Persona</h3>
-                <p>Edit a simple markdown file to define your agent's personality, rules, and behavior. No code changes needed.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">💾</div>
-                <h3>Persistent Memory</h3>
-                <p>Your agent remembers context, facts, and conversations across sessions. Search and manage memories easily.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🖥️</div>
-                <h3>Full VPS Management</h3>
-                <p>System info, process management, firewall rules, Docker, cron jobs, and package installation — all from chat.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📱</div>
-                <h3>Platform Integration</h3>
-                <p>Connect to Telegram and other messaging platforms. Chat with your agents from anywhere.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tools -->
-    <section class="section" id="tools">
-        <h2 class="section-title">Tool Categories</h2>
-        <p class="section-sub">16 categories covering everything from web scraping to VPS management.</p>
-
-        <div class="tools-grid">
-            <div class="tool-tag">🌐 Web & Scraping</div>
-            <div class="tool-tag">🔌 HTTP & API</div>
-            <div class="tool-tag">💻 Code Execution</div>
-            <div class="tool-tag">📁 Git Integration</div>
-            <div class="tool-tag">🗄️ Database</div>
-            <div class="tool-tag">📄 File Formats</div>
-            <div class="tool-tag">📧 Email</div>
-            <div class="tool-tag">🖥️ Terminal & VPS</div>
-            <div class="tool-tag">📊 Monitoring</div>
-            <div class="tool-tag">💾 Caching</div>
-            <div class="tool-tag">⚙️ Workflow</div>
-            <div class="tool-tag">🔔 Notifications</div>
-            <div class="tool-tag">📅 Calendar</div>
-            <div class="tool-tag">🔌 Plugins</div>
-            <div class="tool-tag">🔐 Authentication</div>
-            <div class="tool-tag">🧠 Vector Memory</div>
-        </div>
-    </section>
-
-    <!-- Get Started -->
-    <section class="cta" id="get-started">
-        <h2>Get Started in Seconds</h2>
-        <p>Clone, configure, and run. It's that simple.</p>
-
-        <div class="terminal-wrap" style="padding-bottom:0; max-width:640px;">
+        <!-- Terminal -->
+        <div class="terminal-wrap">
             <div class="terminal">
                 <div class="terminal-header">
                     <div class="terminal-dot"></div>
                     <div class="terminal-dot"></div>
                     <div class="terminal-dot"></div>
-                    <span class="terminal-title">quick start</span>
+                    <span class="terminal-title">aqua — ~/project</span>
                 </div>
                 <div class="terminal-body">
+                    <span class="comment"># Install AQUA</span><br>
                     <span class="prompt">$</span> <span class="cmd">git clone https://github.com/galinaplinoel-stack/aqua.git</span><br>
-                    <span class="prompt">$</span> <span class="cmd">cd aqua</span><br>
-                    <span class="prompt">$</span> <span class="cmd">./setup.sh</span><br>
-                    <span class="prompt">$</span> <span class="cmd">python3 main.py --quick-setup YOUR_API_KEY openai</span><br>
+                    <span class="prompt">$</span> <span class="cmd">cd aqua && ./setup.sh</span><br><br>
+                    <span class="comment"># Configure your LLM provider</span><br>
+                    <span class="prompt">$</span> <span class="cmd">python3 main.py --setup</span><br>
+                    <span class="output">✓ Provider: OpenAI | Model: gpt-4o</span><br><br>
+                    <span class="comment"># Start AQUA</span><br>
                     <span class="prompt">$</span> <span class="cmd">python3 main.py</span><br>
+                    <span class="output">💧 AQUA v1.0 — Enterprise Multi-Agent Framework</span><br>
+                    <span class="output">🔧 80+ tools loaded | 💾 Memory: enabled</span><br><br>
+                    <span class="prompt">AQUA&gt;</span> <span class="cmd">Create a developer agent and have it build a REST API</span><br>
+                    <span class="output">🤖 Created agent: Senior Developer (Engineering)</span><br>
+                    <span class="output">📋 Task assigned: Build REST API</span><br>
+                    <span class="output">✅ Task completed successfully!</span>
                 </div>
             </div>
         </div>
 
-        <div style="margin-top: 40px;">
-            <a href="https://github.com/galinaplinoel-stack/aqua" class="btn btn-primary" target="_blank">
-                ⭐ Star on GitHub
-            </a>
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-num">80+</div>
+                <div class="stat-label">Built-in Tools</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">16</div>
+                <div class="stat-label">Tool Categories</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">∞</div>
+                <div class="stat-label">Sub-Agents</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">0$</div>
+                <div class="stat-label">Free & Open Source</div>
+            </div>
         </div>
-    </section>
 
-    <!-- Footer -->
-    <footer>
-        <p>Built with 💧 by <a href="https://github.com/galinaplinoel-stack">galinaplinoel-stack</a> • MIT License</p>
-    </footer>
+        <!-- Features -->
+        <section class="section" id="features">
+            <h2 class="section-title">Why AQUA?</h2>
+            <p class="section-sub">Everything you need to build and manage AI agent teams.</p>
+
+            <div class="features-grid">
+                <div class="feature">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Multi-Agent Hierarchy</h3>
+                    <p>Define departments, roles, and org charts. Spawn specialized sub-agents and delegate tasks autonomously.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔧</div>
+                    <h3>80+ Built-in Tools</h3>
+                    <p>Web scraping, code execution, database queries, file management, VPS control, and more — all ready to use.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎭</div>
+                    <h3>Customizable Persona</h3>
+                    <p>Edit a simple markdown file to define your agent's personality, rules, and behavior. No code changes needed.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💾</div>
+                    <h3>Persistent Memory</h3>
+                    <p>Your agent remembers context, facts, and conversations across sessions. Search and manage memories easily.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🖥️</div>
+                    <h3>Full VPS Management</h3>
+                    <p>System info, process management, firewall rules, Docker, cron jobs, and package installation — all from chat.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <h3>Platform Integration</h3>
+                    <p>Connect to Telegram and other messaging platforms. Chat with your agents from anywhere.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tools -->
+        <section class="section" id="tools">
+            <h2 class="section-title">Tool Categories</h2>
+            <p class="section-sub">16 categories covering everything from web scraping to VPS management.</p>
+
+            <div class="tools-grid">
+                <div class="tool-tag">🌐 Web & Scraping</div>
+                <div class="tool-tag">🔌 HTTP & API</div>
+                <div class="tool-tag">💻 Code Execution</div>
+                <div class="tool-tag">📁 Git Integration</div>
+                <div class="tool-tag">🗄️ Database</div>
+                <div class="tool-tag">📄 File Formats</div>
+                <div class="tool-tag">📧 Email</div>
+                <div class="tool-tag">🖥️ Terminal & VPS</div>
+                <div class="tool-tag">📊 Monitoring</div>
+                <div class="tool-tag">💾 Caching</div>
+                <div class="tool-tag">⚙️ Workflow</div>
+                <div class="tool-tag">🔔 Notifications</div>
+                <div class="tool-tag">📅 Calendar</div>
+                <div class="tool-tag">🔌 Plugins</div>
+                <div class="tool-tag">🔐 Authentication</div>
+                <div class="tool-tag">🧠 Vector Memory</div>
+            </div>
+        </section>
+
+        <!-- Get Started -->
+        <section class="cta" id="get-started">
+            <h2>Get Started in Seconds</h2>
+            <p>Clone, configure, and run. It's that simple.</p>
+
+            <div class="terminal-wrap" style="padding-bottom:0; max-width:640px;">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot"></div>
+                        <div class="terminal-dot"></div>
+                        <div class="terminal-dot"></div>
+                        <span class="terminal-title">quick start</span>
+                    </div>
+                    <div class="terminal-body">
+                        <span class="prompt">$</span> <span class="cmd">git clone https://github.com/galinaplinoel-stack/aqua.git</span><br>
+                        <span class="prompt">$</span> <span class="cmd">cd aqua</span><br>
+                        <span class="prompt">$</span> <span class="cmd">./setup.sh</span><br>
+                        <span class="prompt">$</span> <span class="cmd">python3 main.py --quick-setup YOUR_API_KEY openai</span><br>
+                        <span class="prompt">$</span> <span class="cmd">python3 main.py</span><br>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <a href="https://github.com/galinaplinoel-stack/aqua" class="btn btn-primary" target="_blank">
+                    ⭐ Star on GitHub
+                </a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>Built with 💧 by <a href="https://github.com/galinaplinoel-stack">galinaplinoel-stack</a> • MIT License</p>
+        </footer>
+    </div>
 
     <script>
+        // === BUBBLES GENERATOR ===
+        const bubblesContainer = document.getElementById('bubbles');
+
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            const size = Math.random() * 40 + 8;
+            const left = Math.random() * 100;
+            const duration = Math.random() * 12 + 8;
+            const drift = (Math.random() - 0.5) * 100;
+            const delay = Math.random() * 5;
+
+            bubble.style.cssText = `
+                width: ${size}px;
+                height: ${size}px;
+                left: ${left}%;
+                bottom: -50px;
+                --drift: ${drift}px;
+                animation-duration: ${duration}s;
+                animation-delay: ${delay}s;
+            `;
+
+            bubblesContainer.appendChild(bubble);
+
+            setTimeout(() => {
+                bubble.remove();
+            }, (duration + delay) * 1000);
+        }
+
+        // Create initial bubbles
+        for (let i = 0; i < 25; i++) {
+            createBubble();
+        }
+
+        // Continuously create bubbles
+        setInterval(() => {
+            if (bubblesContainer.children.length < 30) {
+                createBubble();
+            }
+        }, 800);
+
+        // === PARTICLES ===
+        const particlesContainer = document.getElementById('particles');
+
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+
+            const left = Math.random() * 100;
+            const duration = Math.random() * 20 + 10;
+            const size = Math.random() * 3 + 1;
+            const opacity = Math.random() * 0.4 + 0.1;
+
+            particle.style.cssText = `
+                left: ${left}%;
+                width: ${size}px;
+                height: ${size}px;
+                opacity: ${opacity};
+                animation-duration: ${duration}s;
+                animation-delay: ${Math.random() * 10}s;
+            `;
+
+            particlesContainer.appendChild(particle);
+
+            setTimeout(() => {
+                particle.remove();
+            }, (duration + 10) * 1000);
+        }
+
+        for (let i = 0; i < 30; i++) {
+            createParticle();
+        }
+
+        setInterval(() => {
+            if (particlesContainer.children.length < 40) {
+                createParticle();
+            }
+        }, 1200);
+
         // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(a => {
             a.addEventListener('click', e => {
